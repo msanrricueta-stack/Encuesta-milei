@@ -1,48 +1,34 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const express = require("express");
+const path = require("path");
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, "public")));
 
-const dataFile = path.join(__dirname, 'votos.json');
+let votos = { milei: 0, noMilei: 0 };
+let ips = [];
 
-// Cargar votos
-let votos = { milei: 0, noMilei: 0, ips: [] };
-if (fs.existsSync(dataFile)) {
-  votos = JSON.parse(fs.readFileSync(dataFile));
-}
+app.post("/votar", (req, res) => {
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
 
-function guardarVotos() {
-  fs.writeFileSync(dataFile, JSON.stringify(votos, null, 2));
-}
-
-// API para votar
-app.post('/votar', (req, res) => {
-  const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  if (votos.ips.includes(ip)) {
-    return res.status(400).json({ mensaje: 'Ya has votado desde esta IP' });
+  if (ips.includes(ip)) {
+    return res.status(403).json({ error: "Ya votaste desde esta IP." });
   }
 
   const opcion = req.body.opcion;
-  if (opcion === 'milei') votos.milei++;
-  else if (opcion === 'noMilei') votos.noMilei++;
-  else return res.status(400).json({ mensaje: 'Opción inválida' });
+  if (!["milei", "noMilei"].includes(opcion)) {
+    return res.status(400).json({ error: "Opción inválida" });
+  }
 
-  votos.ips.push(ip);
-  guardarVotos();
-  res.json({ mensaje: 'Voto registrado', votos });
+  votos[opcion]++;
+  ips.push(ip);
+
+  res.json({ ok: true, mensaje: "Voto registrado correctamente" });
 });
 
-// API para obtener resultados
-app.get('/resultados', (req, res) => {
-  res.json({ milei: votos.milei, noMilei: votos.noMilei });
+app.get("/resultados", (req, res) => {
+  res.json(votos);
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-});
-
-
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
