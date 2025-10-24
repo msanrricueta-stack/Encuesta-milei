@@ -1,1 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultados de la encuesta</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f9f9f9;
+      padding: 40px;
+      color: #222;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: #fff;
+      display: inline-block;
+      margin: 20px;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      min-width: 240px;
+    }
+
+    .valor {
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 10px;
+      color: #0077cc;
+    }
+
+    .footer {
+      margin-top: 50px;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Resultados en tiempo real</h1>
+
+  <div class="card">
+    <h2>✅ Apoyo a Milei</h2>
+    <div id="votosMilei" class="valor">0</div>
+  </div>
+
+  <div class="card">
+    <h2>❌ No apoyo a Milei</h2>
+    <div id="votosNoMilei" class="valor">0</div>
+  </div>
+
+  <div class="footer">
+    <p>Actualización automática cada 5 segundos</p>
+  </div>
+
+  <script>
+    async function cargarResultados() {
+      try {
+        const res = await fetch('/resultados');
+        const data = await res.json();
+
+        document.getElementById('votosMilei').textContent = data.milei || 0;
+        document.getElementById('votosNoMilei').textContent = data.noMilei || 0;
+      } catch (err) {
+        console.error('Error al cargar resultados:', err);
+      }
+    }
+
+    cargarResultados();
+    setInterval(cargarResultados, 5000);
+  </script>
+</body>
+</html>
 
